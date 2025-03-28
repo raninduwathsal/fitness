@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Upgrade Tier</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+    <h2>Choose Your Tier</h2>
+    <div th:each="tier : ${tiers}" class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title" th:text="${tier.name}"></h5>
+            <p class="card-text">Price: $<span th:text="${tier.price}"></span></p>
+            <p class="card-text" th:text="${tier.features}"></p>
+            <form th:action="@{/api/upgrade}" method="post">
+                <input type="hidden" name="tierId" th:value="${tier.tierId}">
+                <button type="submit" class="btn btn-primary">Select</button>
+            </form>
+        </div>
+    </div>
+    <a href="/member/dashboard" class="btn btn-secondary">Back</a>
+</div>
+</body>
+</html>

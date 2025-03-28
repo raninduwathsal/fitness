@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Member Dashboard</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+    <h2>Member Dashboard</h2>
+    <p>Status: <span th:text="${membership.status}"></span></p>
+    <p>Expiry Date: <span th:text="${membership.expiryDate}"></span></p>
+    <p>Tier ID: <span th:text="${membership.tierId}"></span></p>
+    <a href="/api/users/update" class="btn btn-primary">Update Details</a>
+    <a href="/api/upgrade" class="btn btn-primary">Upgrade/Renew Tier</a>
+    <a href="/api/users/logout" class="btn btn-danger">Logout</a>
+</div>
+</body>
+</html>

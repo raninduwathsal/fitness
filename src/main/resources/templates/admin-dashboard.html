@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+    <h2>Admin Dashboard</h2>
+
+    <h3>Pending Requests (Queue)</h3>
+    <table class="table">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Date</th>
+            <th>Tier ID</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="request : ${requests}">
+            <td th:text="${request.requestId}"></td>
+            <td th:text="${request.username}"></td>
+            <td th:text="${request.requestDate}"></td>
+            <td th:text="${request.tierId}"></td>
+            <td>
+                <form th:action="@{/admin/approve}" method="post">
+                    <input type="hidden" name="requestId" th:value="${request.requestId}">
+                    <button type="submit" class="btn btn-success">Approve</button>
+                </form>
+            </td>
+        </tr>
+        <tr th:if="${requests.isEmpty()}">
+            <td colspan="5">No pending requests</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <h3>Members (Sorted by Last Renewal Date)</h3>
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Username</th>
+            <th>Status</th>
+            <th>Expiry Date</th>
+            <th>Tier ID</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="member : ${members}">
+            <td th:text="${member.username}"></td>
+            <td th:text="${member.status}"></td>
+            <td th:text="${member.expiryDate}"></td>
+            <td th:text="${member.tierId}"></td>
+        </tr>
+        <tr th:if="${members.isEmpty()}">
+            <td colspan="4">No members found</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <a href="/api/users/update" class="btn btn-primary">Update Details</a>
+    <a href="/api/users/logout" class="btn btn-danger">Logout</a>
+</div>
+</body>
+</html>
