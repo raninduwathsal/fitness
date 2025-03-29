@@ -1,8 +1,14 @@
 package pg222.fitness.service;
 
+import jakarta.annotation.PostConstruct;
 import pg222.fitness.model.Membership;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -66,5 +72,25 @@ public class MembershipService {
             }
             memberships.set(j + 1, key);
         }
+    }
+   @PostConstruct
+    public void checkAndExpireMemberships() throws IOException {
+        List<String> lines = fileService.readFile("memberships.txt");
+        List<String> updatedLines = new ArrayList<>();
+        LocalDate currentDate = LocalDate.now();
+
+        for (String line : lines) {
+            String[] parts = line.split(",");
+            LocalDate expiryDate = LocalDate.parse(parts[2]);
+            if (expiryDate.isBefore(currentDate)) {
+                parts[1] = "expired"; // Assuming the status is stored in parts[1]
+            }
+            else {
+                parts[1] = "active";
+            }
+            updatedLines.add(String.join(",", parts));
+        }
+
+        fileService.writeFile("memberships.txt", updatedLines);
     }
 }
