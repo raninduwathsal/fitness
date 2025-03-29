@@ -8,6 +8,12 @@
 <body>
 <div class="container">
     <h2>Member Dashboard</h2>
+
+    <!-- Warning Message for Expired Membership -->
+    <div th:if="${membership.status == 'expired'}" class="alert alert-warning" role="alert">
+        Your membership has expired! Please update your package for the new month.
+    </div>
+
     <p>Status: <span th:text="${membership.status}"></span></p>
     <p>Expiry Date: <span th:text="${membership.expiryDate}"></span></p>
     <p>Tier ID: <span th:text="${membership.tierId}"></span></p>
