@@ -3,6 +3,7 @@ package pg222.fitness.controller;
 import pg222.fitness.model.Admin;
 import pg222.fitness.model.GymMember;
 import pg222.fitness.model.User;
+import pg222.fitness.service.MembershipService;
 import pg222.fitness.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,8 @@ import java.io.IOException;
 public class UserController {
     @Autowired
     private UserService userService;
+    @Autowired
+    private MembershipService membershipService;
 
     @GetMapping("/login")
     public String showLogin() {
@@ -59,8 +62,9 @@ public class UserController {
     }
 
     @GetMapping("/logout")
-    public String logout(HttpSession session) {
+    public String logout(HttpSession session) throws IOException {
         session.invalidate();
+        membershipService.  checkAndExpireMemberships();
         return "redirect:/api/users/login";
     }
 }
