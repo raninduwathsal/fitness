@@ -22,4 +22,19 @@ public class TierService {
         }
         return tiers;
     }
+
+    public void updateTier(Tier updatedTier) throws IOException {
+        List<Tier> tiers = getAllTiers();
+        List<String> newLines = new ArrayList<>();
+
+        for (Tier tier : tiers) {
+            if (tier.getTierId() == updatedTier.getTierId()) {
+                newLines.add(updatedTier.toString());
+            } else {
+                newLines.add(tier.toString());
+            }
+        }
+
+        fileService.writeFile("tiers.txt", newLines);
+    }
 }

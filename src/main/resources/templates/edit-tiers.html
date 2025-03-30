@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Edit Tiers</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        .form-container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<h1>Edit Membership Tiers</h1>
+
+<h2>Current Tiers</h2>
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Price</th>
+        <th>Features</th>
+    </tr>
+    <tr th:each="tier : ${tiers}">
+        <td th:text="${tier.tierId}"></td>
+        <td th:text="${tier.name}"></td>
+        <td th:text="${tier.price}"></td>
+        <td th:text="${tier.features}"></td>
+    </tr>
+</table>
+
+<div class="form-container">
+    <h2>Edit Tier</h2>
+    <form th:action="@{/api/edit-tiers}" th:object="${tier}" method="post">
+        <div>
+            <label for="tierId">Tier ID:</label>
+            <input type="number" id="tierId" th:field="*{tierId}" required>
+        </div>
+        <div>
+            <label for="name">Name:</label>
+            <input type="text" id="name" th:field="*{name}" required>
+        </div>
+        <div>
+            -to edit<label for="price">Price:</label>
+            <input type="number" step="0.01" id="price" th:field="*{price}" required>
+        </div>
+        <div>
+            <label for="features">Features:</label>
+            <input type="text" id="features" th:field="*{features}" required>
+        </div>
+        <button type="submit">Update Tier</button>
+    </form>
+</div>
+</body>
+</html>

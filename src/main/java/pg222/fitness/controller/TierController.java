@@ -1,5 +1,6 @@
 package pg222.fitness.controller;
 
+import pg222.fitness.model.Tier;
 import pg222.fitness.model.User;
 import pg222.fitness.service.RequestService;
 import pg222.fitness.service.TierService;
@@ -30,5 +31,18 @@ public class TierController {
         User user = (User) session.getAttribute("user");
         requestService.createRequest(user.getUsername(), tierId);
         return "redirect:/member/dashboard";
+    }
+
+    @GetMapping("/edit-tiers")
+    public String showEditTiers(Model model) throws IOException {
+        model.addAttribute("tiers", tierService.getAllTiers());
+        model.addAttribute("tier", new Tier(0, "", 0.0, ""));
+        return "edit-tiers";
+    }
+
+    @PostMapping("/edit-tiers")
+    public String editTier(@ModelAttribute Tier tier) throws IOException {
+        tierService.updateTier(tier);
+        return "redirect:/api/edit-tiers";
     }
 }
