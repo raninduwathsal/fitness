@@ -1,14 +1,15 @@
 package pg222.fitness.controller;
 
-import pg222.fitness.model.Admin;
-import pg222.fitness.model.GymMember;
 import pg222.fitness.model.User;
-import pg222.fitness.service.MembershipService;
 import pg222.fitness.service.UserService;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 
@@ -17,8 +18,6 @@ import java.io.IOException;
 public class UserController {
     @Autowired
     private UserService userService;
-    @Autowired
-    private MembershipService membershipService;
 
     @GetMapping("/login")
     public String showLogin() {
@@ -26,13 +25,28 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public String login(@RequestParam String username, @RequestParam String password, HttpSession session) throws IOException {
-        User user = userService.login(username, password);
-        if (user != null) {
-            session.setAttribute("user", user);
-            return user.getRole().equals("member") ? "redirect:/member/dashboard" : "redirect:/admin/dashboard";
+    public String loginUser(@RequestParam String username, @RequestParam String password,
+                            HttpSession session, RedirectAttributes redirectAttributes) {
+        try {
+            User user = userService.login(username, password);
+            if (user != null) {
+                session.setAttribute("user", user);
+                if ("admin".equals(user.getRole())) {
+                    if ("pending".equals(user.getStatus())) {
+                        return "waiting-approval"; // Redirect to waiting page if pending
+                    }
+                    return "redirect:/admin/dashboard";
+                } else {
+                    return "redirect:/member/dashboard";
+                }
+            } else {
+                redirectAttributes.addFlashAttribute("error", "Invalid credentials");
+                return "redirect:/api/users/login?error";
+            }
+        } catch (IOException e) {
+            redirectAttributes.addFlashAttribute("error", "Error during login");
+            return "redirect:/api/users/login?error";
         }
-        return "redirect:/api/users/login?error";
     }
 
     @GetMapping("/register")
@@ -41,12 +55,21 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public String register(@RequestParam String username, @RequestParam String password, @RequestParam String email, @RequestParam String role) throws IOException {
-        User user = role.equals("member") ? new GymMember(username, password, email) : new Admin(username, password, email);
-        if (userService.registerUser(user)) {
-            return "redirect:/api/users/login";
+    public String register(@RequestParam String username, @RequestParam String password,
+                           @RequestParam String email, @RequestParam String role, RedirectAttributes redirectAttributes) {
+        try {
+            User user = new User(username, password, role, email);
+            boolean registered = userService.registerUser(user);
+            if (registered) {
+                return "redirect:/api/users/login";
+            } else {
+                redirectAttributes.addFlashAttribute("error", "Username or email already exists");
+                return "redirect:/api/users/register?error";
+            }
+        } catch (IOException e) {
+            redirectAttributes.addFlashAttribute("error", "Error during registration");
+            return "redirect:/api/users/register?error";
         }
-        return "redirect:/api/users/register?error";
     }
 
     @GetMapping("/update")
@@ -55,16 +78,19 @@ public class UserController {
     }
 
     @PostMapping("/update")
-    public String updateDetails(@RequestParam String email, @RequestParam String password, HttpSession session) throws IOException {
+    public String updateUser(@RequestParam String email, @RequestParam String password,
+                             HttpSession session) throws IOException {
         User user = (User) session.getAttribute("user");
+        if (user == null) {
+            return "redirect:/api/users/login";
+        }
         userService.updateUser(user.getUsername(), email, password);
-        return user.getRole().equals("member") ? "redirect:/member/dashboard" : "redirect:/admin/dashboard";
+        return "redirect:/api/users/logout";
     }
 
     @GetMapping("/logout")
-    public String logout(HttpSession session) throws IOException {
+    public String logout(HttpSession session) {
         session.invalidate();
-        membershipService.  checkAndExpireMemberships();
         return "redirect:/api/users/login";
     }
 }

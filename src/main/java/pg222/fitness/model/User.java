@@ -1,18 +1,26 @@
 package pg222.fitness.model;
 
-import java.util.Objects;
-
 public class User {
-    private final String username;
+    private String username;
     private String password;
-    private final String role;
+    private String role;
     private String email;
+    private String status; // New field for status (active/pending)
 
     public User(String username, String password, String role, String email) {
         this.username = username;
         this.password = password;
         this.role = role;
         this.email = email;
+        this.status = "active"; // Default to active for members and existing admins
+    }
+
+    public User(String username, String password, String role, String email, String status) {
+        this.username = username;
+        this.password = password;
+        this.role = role;
+        this.email = email;
+        this.status = status;
     }
 
     public String getUsername() {
@@ -23,10 +31,6 @@ public class User {
         return password;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
     public String getRole() {
         return role;
     }
@@ -35,28 +39,16 @@ public class User {
         return email;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     @Override
     public String toString() {
-        return username + "," + password + "," + role + "," + email;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        User user = (User) o;
-        return Objects.equals(username, user.username) &&
-                Objects.equals(password, user.password) &&
-                Objects.equals(role, user.role) &&
-                Objects.equals(email, user.email);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(username, password, role, email);
+        return username + "," + password + "," + role + "," + email + "," + status;
     }
 }
