@@ -22,7 +22,7 @@ jobs:
       - name: Build Without Tests
         run: mvn clean package -DskipTests
 
-      - name: Copy JAR to VPS
+      - name: Copy JAR and .txt Files to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VPS_IP }}
@@ -31,7 +31,8 @@ jobs:
           source: |
             target/*.jar
             *.txt  # Include .txt files from the root directory
-          target: "~/app"
+          target: "~/app"  # Destination directory on the VPS
+
 
       - name: Restart Application on VPS
         uses: appleboy/ssh-action@v1.0.3
