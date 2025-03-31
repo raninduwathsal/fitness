@@ -1,0 +1,43 @@
+name: Deploy to VPS (All-CI-CD)
+
+on:
+  push:
+    branches:
+      - All-CI-CD
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set Up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Build Without Tests
+        run: mvn clean package -DskipTests
+
+      - name: Copy JAR to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          source: "target/*.jar"
+          target: "~/app"
+
+      - name: Restart Application on VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          script: |
+            pkill -f 'java -jar' || true
+            nohup java -jar ~/app/*.jar > ~/app/logs.txt 2>&1 &
+
