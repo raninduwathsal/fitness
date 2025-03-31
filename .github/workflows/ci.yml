@@ -38,6 +38,5 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.DEPLOY_KEY }}
           script: |
-            pkill -f 'java -jar' || true
-            nohup java -jar ~/app/*.jar > ~/app/logs.txt 2>&1 &
-
+            sudo systemctl restart springboot-app
+            sudo systemctl status springboot-app
