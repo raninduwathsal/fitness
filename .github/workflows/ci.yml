@@ -28,7 +28,9 @@ jobs:
           host: ${{ secrets.VPS_IP }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.DEPLOY_KEY }}
-          source: "target/*.jar"
+          source: |
+            target/*.jar
+            *.txt  # Include .txt files from the root directory
           target: "~/app"
 
       - name: Restart Application on VPS
