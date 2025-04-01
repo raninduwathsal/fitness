@@ -1,45 +1,76 @@
-name: Deploy to VPS (All-CI-CD)
+name: Build and Deploy
 
 on:
   push:
     branches:
-      - All-CI-CD
+      - main
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Set Up JDK 21
+      - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
           java-version: '21'
+          distribution: 'temurin'
 
-      - name: Build Without Tests
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Build with Maven
         run: mvn clean package -DskipTests
 
-      - name: Copy JAR and .txt Files to VPS
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.VPS_IP }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.DEPLOY_KEY }}
-          source: |
-            target/*.jar
-            *.txt  # Include .txt files from the root directory
-          target: "~/app"  # Destination directory on the VPS
+      - name: Create output directory
+        run: mkdir -p dist
 
+      - name: Copy JAR and TXT files
+        run: |
+          cp target/*.jar dist/
+          cp *.txt dist/  # Copy .txt files from root
 
-      - name: Restart Application on VPS
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Deploy to server and restart service
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+        run: |
+          # Set up SSH key
+          echo "$SSH_PRIVATE_KEY" > private_key
+          chmod 600 private_key
+          
+          # SSH into server, copy files, and restart service
+          ssh -i private_key -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << 'EOF'
+            # Stop the service if running
+            sudo systemctl stop fitness-app.service || true
+          
+            # Create app directory if it doesn’t exist
+            mkdir -p /opt/fitness-app
+          
+            # Remove old files
+            rm -f /opt/fitness-app/*.jar
+            rm -f /opt/fitness-app/*.txt
+          EOF
+          
+          # Copy new JAR and .txt files
+          scp -i private_key -o StrictHostKeyChecking=no dist/*.jar dist/*.txt $SERVER_USER@$SERVER_IP:/opt/fitness-app/
+          
+          # Restart the service
+          ssh -i private_key -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << 'EOF'
+            sudo systemctl start fitness-app.service
+            sudo systemctl enable fitness-app.service  # Ensure it starts on boot
+          EOF
+
+      - name: Upload artifacts (optional)
+        uses: actions/upload-artifact@v3
         with:
-          host: ${{ secrets.VPS_IP }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.DEPLOY_KEY }}
-          script: |
-            sudo systemctl restart springboot-app
-            sudo systemctl status springboot-app
+          name: app-bundle
+          path: dist/*
