@@ -16,7 +16,7 @@ jobs:
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
-          java-version: ''
+          java-version: '17'  # Fixed: Specify version
           distribution: 'temurin'
 
       - name: Cache Maven packages
@@ -43,23 +43,23 @@ jobs:
           name: app-bundle
           path: dist/*
 
-    # Optional: Uncomment to deploy and restart service on push
-     - name: Deploy to server and restart service
-       env:
-         SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-         SERVER_IP: ${{ secrets.SERVER_IP }}
-         SERVER_USER: ${{ secrets.SERVER_USER }}
-       run: |
-         echo "$SSH_PRIVATE_KEY" > private_key
-         chmod 600 private_key
-         ssh -i private_key -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << 'EOF'
-           sudo systemctl stop fitness-app.service || true
-           mkdir -p /opt/fitness-app
-           rm -f /opt/fitness-app/*.jar
-           rm -f /opt/fitness-app/*.txt
-         EOF
-         scp -i private_key -o StrictHostKeyChecking=no dist/*.jar dist/*.txt $SERVER_USER@$SERVER_IP:/opt/fitness-app/
-         ssh -i private_key -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << 'EOF'
-           sudo systemctl start fitness-app.service
-           sudo systemctl enable fitness-app.service
-         EOF
+      # Optional: Deploy to server and restart service on push
+      - name: Deploy to server and restart service
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+        run: |
+          echo "$SSH_PRIVATE_KEY" > private_key
+          chmod 600 private_key
+          ssh -i private_key -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << 'EOF'
+            sudo systemctl stop fitness-app.service || true
+            mkdir -p /opt/fitness-app
+            rm -f /opt/fitness-app/*.jar
+            rm -f /opt/fitness-app/*.txt
+          EOF
+          scp -i private_key -o StrictHostKeyChecking=no dist/*.jar dist/*.txt $SERVER_USER@$SERVER_IP:/opt/fitness-app/
+          ssh -i private_key -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << 'EOF'
+            sudo systemctl start fitness-app.service
+            sudo systemctl enable fitness-app.service
+          EOF
